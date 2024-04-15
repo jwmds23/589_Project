@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## 1. Preparation
+
 ```{r}
 # load necessary packages
 library(spatstat)
@@ -16,9 +19,11 @@ library(sp)
 library(sf)
 ```
 
-```{r}
-# First Moment
+## 2. First Moment Analysis
 
+### (1) Data Overview
+
+```{r}
 # load the coordinates information of fir and preprocess the data
 df <- read_excel("../data/fir_coordinates.xlsx")
 df <- na.omit(df)
@@ -47,6 +52,43 @@ window_owin <- as.owin(sf::st_geometry(sf_object))
 fir_ppp <- ppp(x=coords[,1], y=coords[,2], window = window_owin)
 
 # plot the fir points
-plot(fir_ppp, pch=16, cex=0.5, cols='green')
+plot(elevation, main='Douglas Fir in BC')
+plot(fir_ppp, pch=16, cex=0.5, cols='green', add=TRUE)
 # 
+```
+
+### (2) Intensity Analysis
+
+```{r}
+# calculate the intensity
+intensity(rescale(fir_ppp, 1000, unitname = 'km'))
+```
+
+```{r}
+# conduct the quadrat count test
+Q <- quadratcount(fir_ppp, nx=10, ny=10)
+
+plot(intensity(Q, image=TRUE), col=terrain.colors(100), main='Intensity of Douglas Fir in BC')
+```
+
+```{r}
+quadrat.test(Q)
+```
+
+### (3) Hotspot Analysis
+
+```{r}
+lambda_u_hat <- density(fir_ppp)
+
+# perform the hotspot analysis
+R <- bw.ppl(fir_ppp)
+
+# calculate the test statistic
+lr <- scanLRTS(fir_ppp, r=R)
+
+# compute the local p-values
+pvals <- eval.im(pchisq(lr, df=1, lower.tail=FALSE))
+
+# plot the test result
+plot(pvals)
 ```
