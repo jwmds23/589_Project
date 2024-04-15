@@ -18,27 +18,19 @@ library(sf)
 library(raster)
 
 df<- read_excel("../data/fir_coordinates.xlsx")
-#bc_covariates <- load(file = "../data/BC_Covariates.Rda")
 window <- DATA$Window
 elevation <- DATA$Elevation
 forest <- DATA$Forest
 HFI <- DATA$HFI
 dist_water <- DATA$Dist_Water
 
-# Define the observation window based on the ranges of x and y
-#W <- as.owin(window)
-
-
-# Suppose sp_poly is your SpatialPolygons object
-# Convert it to an owin object
-#owin_object <- as.owin(sp_poly)
 sf_object <- st_as_sf(window)
 window_owin <- as.owin(sf::st_geometry(sf_object))
 # Create the ppp object
-point_pattern <- ppp(x = df$X, y = df$Y, window = window_owin)
+fir_ppp <- ppp(x = df$X, y = df$Y, window = window_owin)
 
 #Load in and plot the Finnish data(finpines); 
-plot(point_pattern)
+plot(fir_ppp)
 str(DATA)
 # 
 ```
