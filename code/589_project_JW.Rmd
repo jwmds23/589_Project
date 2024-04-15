@@ -8,29 +8,45 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
 ```{r}
-# First Moment
+# load necessary packages
 library(spatstat)
 library(readxl)
 library(sp)
 library(sf)
-library(raster)
+```
 
-df<- read_excel("../data/fir_coordinates.xlsx")
+```{r}
+# First Moment
+
+# load the coordinates information of fir and preprocess the data
+df <- read_excel("../data/fir_coordinates.xlsx")
+df <- na.omit(df)
+df <- df[, c("longtitude", 'latitude')]
+
+# load the covariates of BC
+load("../data/BC_Covariates.Rda")
 window <- DATA$Window
 elevation <- DATA$Elevation
 forest <- DATA$Forest
 HFI <- DATA$HFI
 dist_water <- DATA$Dist_Water
 
+# define BC Albers Projection
+bc_albers <- CRS("+proj=aea +lat_0=45 +lon_0=-126 +lat_1=50 +lat_2=58.5 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs")
+# transform the coordinates
+df <- spTransform(SpatialPoints(df, proj4string=CRS("+proj=longlat +datum=WGS84")), bc_albers)
+# extract the coordinates from the transformed df
+coords <- coordinates(df)
+
+# create the window object
 sf_object <- st_as_sf(window)
 window_owin <- as.owin(sf::st_geometry(sf_object))
-# Create the ppp object
-fir_ppp <- ppp(x = df$X, y = df$Y, window = window_owin)
 
-#Load in and plot the Finnish data(finpines); 
-plot(fir_ppp)
-str(DATA)
+# create the ppp object
+fir_ppp <- ppp(x=coords[,1], y=coords[,2], window = window_owin)
+
+# plot the fir points
+plot(fir_ppp, pch=16, cex=0.5, cols='green')
 # 
 ```
