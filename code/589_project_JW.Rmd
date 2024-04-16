@@ -92,3 +92,52 @@ pvals <- eval.im(pchisq(lr, df=1, lower.tail=FALSE))
 # plot the test result
 plot(pvals)
 ```
+
+### (4) Intensity vs Covariates
+
+```{r}
+par(mfrow=c(2,2))
+rho_elev <- rhohat(fir_ppp, elevation)
+rho_hfi <- rhohat(fir_ppp, HFI)
+rho_forest <- rhohat(fir_ppp, forest)
+rho_dist_water <- rhohat(fir_ppp, dist_water)
+
+plot(rho_elev, xlim=c(0, max(elevation)))
+plot(rho_hfi, xlim=c(0, max(HFI)))
+plot(rho_forest, xlim=c(0, max(forest)))
+plot(rho_dist_water, xlim=c(0, max(dist_water)))
+```
+
+## 3. Second Moment Analysis
+
+```{r}
+lambda_u_hat <- density(fir_ppp,
+                        sigma=bw.ppl,
+                        positive=TRUE)
+
+set.seed(589)
+fir_k <- envelope(fir_ppp,
+                  Kinhom,
+                  simulate=expression(rpoispp(lambda_u_hat)),
+                  fix.n=TRUE,
+                  correction='border',
+                  nsim=19,
+                  rank=1)
+
+plot(fir_k)
+```
+
+```{r}
+plot(fir_k, xlim=c(0, 20000))
+```
+
+```{r}
+set.seed(589)
+pcf_fir <- envelope(fir_ppp,
+                    pcfinhom,
+                    simulate=expression(rpoispp(lambda_u_hat)),
+                    nsim=19,
+                    rank=1)
+
+plot(pcf_fir)
+```
