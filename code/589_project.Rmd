@@ -1,10 +1,153 @@
 ---
-title: "589_Project"
-author: "Xing Xu (42946970)"
-date: "2024-04-14"
+title: "589 Project"
+author: "Jinxin Wang"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r}
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## 1. Preparation
+
+```{r}
+# load necessary packages
+library(spatstat)
+library(readxl)
+library(sp)
+library(sf)
+```
+
+## 2. First Moment Analysis
+
+### (1) Data Overview
+
+```{r}
+# load the coordinates information of fir and preprocess the data
+df <- read_excel("../data/fir_coordinates.xlsx")
+df <- na.omit(df)
+df <- df[, c("longtitude", 'latitude')]
+
+# load the covariates of BC
+load("../data/BC_Covariates.Rda")
+window <- DATA$Window
+elevation <- DATA$Elevation
+forest <- DATA$Forest
+HFI <- DATA$HFI
+dist_water <- DATA$Dist_Water
+
+# define BC Albers Projection
+bc_albers <- CRS("+proj=aea +lat_0=45 +lon_0=-126 +lat_1=50 +lat_2=58.5 +x_0=1000000 +y_0=0 +datum=NAD83 +units=m +no_defs")
+# transform the coordinates
+df <- spTransform(SpatialPoints(df, proj4string=CRS("+proj=longlat +datum=WGS84")), bc_albers)
+# extract the coordinates from the transformed df
+coords <- coordinates(df)
+
+# create the window object
+sf_object <- st_as_sf(window)
+window_owin <- as.owin(sf::st_geometry(sf_object))
+
+# create the ppp object
+fir_ppp <- ppp(x=coords[,1], y=coords[,2], window = window_owin)
+
+# plot the fir points
+plot(elevation, main='Douglas Fir in BC')
+plot(fir_ppp, pch=16, cex=0.5, cols='green', add=TRUE)
+# 
+```
+
+### (2) Intensity Analysis
+
+```{r}
+# calculate the intensity
+intensity(rescale(fir_ppp, 1000, unitname = 'km'))
+```
+
+```{r}
+# conduct the quadrat count test
+Q <- quadratcount(fir_ppp, nx=10, ny=10)
+
+plot(intensity(Q, image=TRUE), col=terrain.colors(100), main='Intensity of Douglas Fir in BC')
+```
+
+```{r}
+quadrat.test(Q)
+```
+
+### (3) Hotspot Analysis
+
+```{r}
+lambda_u_hat <- density(fir_ppp)
+
+# perform the hotspot analysis
+R <- bw.ppl(fir_ppp)
+
+# calculate the test statistic
+lr <- scanLRTS(fir_ppp, r=R)
+
+# compute the local p-values
+pvals <- eval.im(pchisq(lr, df=1, lower.tail=FALSE))
+
+# plot the test result
+plot(pvals)
+```
+
+### (4) Intensity vs Covariates
+
+```{r}
+par(mfrow=c(2,2))
+rho_elev <- rhohat(fir_ppp, elevation)
+rho_hfi <- rhohat(fir_ppp, HFI)
+rho_forest <- rhohat(fir_ppp, forest)
+rho_dist_water <- rhohat(fir_ppp, dist_water)
+
+plot(rho_elev, xlim=c(0, max(elevation)))
+plot(rho_hfi, xlim=c(0, max(HFI)))
+plot(rho_forest, xlim=c(0, max(forest)))
+plot(rho_dist_water, xlim=c(0, max(dist_water)))
+```
+
+## 3. Second Moment Analysis
+
+```{r}
+lambda_u_hat <- density(fir_ppp,
+                        sigma=bw.ppl,
+                        positive=TRUE)
+
+set.seed(589)
+fir_k <- envelope(fir_ppp,
+                  Kinhom,
+                  simulate=expression(rpoispp(lambda_u_hat)),
+                  fix.n=TRUE,
+                  correction='border',
+                  nsim=19,
+                  rank=1)
+
+plot(fir_k)
+```
+
+```{r}
+plot(fir_k, xlim=c(0, 20000))
+```
+
+```{r}
+set.seed(589)
+pcf_fir <- envelope(fir_ppp,
+                    pcfinhom,
+                    simulate=expression(rpoispp(lambda_u_hat)),
+                    nsim=19,
+                    rank=1)
+
+plot(pcf_fir)
+```
+
+## 4. Model
+```{r}
+# check the collinearity between covariates
+cor.im(elevation, forest, HFI, dist_water, use='complete.obs')
+```
+```{r}
+# examine the relations between 
+```
+

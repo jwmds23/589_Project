@@ -146,10 +146,13 @@ plot(pcf_fir)
 ## 4. Fitting and Validating Poisson Point Process Models
 
 ### (1) PPP Pre-analysis: Collinearity
+
 ```{r}
 cor.im(elevation,HFI,forest,dist_water,use = "na.or.complete")
 ```
+
 ### (2) Model fitting
+
 ```{r}
 fit <- ppm(fir_ppp ~ elevation + HFI + forest + dist_water)
 fit
@@ -171,6 +174,7 @@ plot(fir_ppp,
      cols = "darkgreen",
      add = TRUE)
 ```
+
 ```{r}
 E_elev <- mean(elevation,na.rm = TRUE)
 E_HFI <- mean(HFI,na.rm = TRUE)
@@ -209,24 +213,52 @@ fit_null <- ppm(fir_ppp ~ 1)
 anova(fit_null, fit, test = "LRT")
 AIC(fit_null) - AIC(fit)
 
-fit_quadrat <- ppm(fir_ppp ~ elevation + HFI + forest + dist_water 
-             + I(elevation^2) + I(HFI^2) + I(forest^2)
-             )
+fit_quadrat <- ppm(fir_ppp ~ elevation + HFI + dist_water + I(elevation^2)+I(forest^2)+I(exp(HFI)))
 anova(fit, fit_quadrat, test = "LRT")
 AIC(fit) - AIC(fit_quadrat)
 ```
+
 ```{r}
 fit_quadrat
 ```
+
 ### (4) Model Validation
+
 ```{r}
-quadrat.test(fit, nx = 4, ny = 8)
+quadrat.test(fit_quadrat, nx = 3, ny = 5)
 ```
 
 ```{r}
-res <- residuals(fit)
-plot(res,cols = "transparent")
+res <- residuals(fit_quadrat)
+na_indexes <- which(is.na(res$val))
+
+# If you need to exclude NA values explicitly
+if (length(na_indexes) > 0) {
+  res <- res[-na_indexes]
+  plot(res, cols='transparent')
+} else {
+  plot(res, cols='transparent')
+}
 ```
 
+### (5) Partial Residual Analysis
 
+```{r}
+par_res_elev <- parres(fit_quadrat, 'elevation')
+plot(par_res_elev)
+```
 
+```{r}
+par_res_forest <- parres(fit_quadrat, 'forest')
+plot(par_res_forest)
+```
+
+```{r}
+par_res_hfi <- parres(fit_quadrat, 'HFI')
+plot(par_res_hfi)
+```
+
+```{r}
+par_res_dist <- parres(fit_quadrat, 'dist_water')
+plot(par_res_dist)
+```
