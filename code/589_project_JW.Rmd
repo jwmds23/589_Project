@@ -90,7 +90,7 @@ lr <- scanLRTS(fir_ppp, r=R)
 pvals <- eval.im(pchisq(lr, df=1, lower.tail=FALSE))
 
 # plot the test result
-plot(pvals)
+plot(pvals, main='Hotspot Analysis')
 ```
 
 ### (4) Intensity vs Covariates
@@ -103,10 +103,11 @@ rho_dist_water <- rhohat(fir_ppp, dist_water)
 ```
 
 ```{r}
-plot(rho_elev, xlim=c(0, max(elevation)))
-plot(rho_hfi, xlim=c(0, max(HFI)))
-plot(rho_forest, xlim=c(0, max(forest)))
-plot(rho_dist_water, xlim=c(0, max(dist_water)))
+par(mfrow=c(2,2))
+plot(rho_elev, xlim=c(0, max(elevation)), legend=FALSE, main='Elevation', xlab=NA)
+plot(rho_hfi, xlim=c(0, max(HFI)), legend=FALSE, main='HFI', xlab=NA)
+plot(rho_forest, xlim=c(0, max(forest)), legend=FALSE, main='Forest', xlab=NA)
+plot(rho_dist_water, xlim=c(0, max(dist_water)), legend=FALSE, main='Distance to Water', xlab=NA)
 ```
 
 ## 3. Second Moment Analysis
@@ -140,7 +141,7 @@ pcf_fir <- envelope(fir_ppp,
                     nsim=19,
                     rank=1)
 
-plot(pcf_fir)
+plot(pcf_fir, main='Pair Correlation Analysis', legend=FALSE)
 ```
 
 ## 4. Fitting and Validating Poisson Point Process Models
