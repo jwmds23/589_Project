@@ -223,6 +223,13 @@ AIC(fit) - AIC(fit_quadrat)
 fit_quadrat
 ```
 
+```{r}
+plot(log(predict(fit_quadrat, n=64)),
+     se = FALSE,
+     superimpose = FALSE,
+     main='Predicted Intensity of Douglas Fir in BC')
+```
+
 ### (4) Model Validation
 
 ```{r}
@@ -236,30 +243,38 @@ na_indexes <- which(is.na(res$val))
 # If you need to exclude NA values explicitly
 if (length(na_indexes) > 0) {
   res <- res[-na_indexes]
-  plot(res, cols='transparent')
+  plot(res, cols='transparent', main='Residuals in BC')
 } else {
   plot(res, cols='transparent')
 }
+```
+
+```{r}
+plot(res, cols='transparent', xlim=c(min(res$loc$x), quantile(res$loc$x, 0.8)), ylim=c(min(res$loc$y), quantile(res$loc$y, 0.3)), main='Residuals of Southwestern Part')
 ```
 
 ### (5) Partial Residual Analysis
 
 ```{r}
 par_res_elev <- parres(fit_quadrat, 'elevation')
-plot(par_res_elev)
 ```
 
 ```{r}
 par_res_forest <- parres(fit_quadrat, 'forest')
-plot(par_res_forest)
 ```
 
 ```{r}
 par_res_hfi <- parres(fit_quadrat, 'HFI')
-plot(par_res_hfi)
 ```
 
 ```{r}
 par_res_dist <- parres(fit_quadrat, 'dist_water')
-plot(par_res_dist)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(par_res_elev, main='Elevation - Partial Residual Analysis', legend=FALSE, xlab=NA)
+plot(par_res_hfi, main='HFI - Partial Residual Analysis', legend=FALSE, xlab=NA)
+plot(par_res_dist, main='Distance to Water - Partial Residual Analysis', legend=FALSE, xlab=NA)
+plot(par_res_forest, main='Forest - Partial Residual Analysis', legend=FALSE, xlab=NA)
 ```
