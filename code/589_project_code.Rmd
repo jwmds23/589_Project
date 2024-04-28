@@ -65,10 +65,11 @@ intensity(rescale(fir_ppp, 1000, unitname = 'km'))
 ```
 
 ```{r}
+library(viridis)
 # conduct the quadrat count test
 Q <- quadratcount(fir_ppp, nx=10, ny=10)
 
-plot(intensity(Q, image=TRUE), col=terrain.colors(100), main='Intensity of Douglas Fir in BC')
+plot(intensity(Q, image=TRUE), col=viridis(2000), main='Intensity of Douglas Fir in BC')
 ```
 
 ```{r}
